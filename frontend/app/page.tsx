@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/context/AuthContext';
 
 export default function Home() {
   const { user, loading } = useAuth();
@@ -11,16 +11,16 @@ export default function Home() {
   useEffect(() => {
     if (!loading) {
       if (user) {
-        router.replace('/tasks');
+        router.push('/tasks');
       } else {
-        router.replace('/login');
+        router.push('/login');
       }
     }
   }, [user, loading, router]);
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-neutral-950 flex items-center justify-center">
-      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 dark:border-white"></div>
+    <div className="flex min-h-screen items-center justify-center bg-gray-50 dark:bg-neutral-950">
+      <div className="h-8 w-8 animate-spin rounded-full border-4 border-black border-t-transparent dark:border-white" />
     </div>
   );
 }
