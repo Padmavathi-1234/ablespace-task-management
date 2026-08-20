@@ -18,14 +18,17 @@ async function bootstrap() {
 
   // CORS
   app.enableCors({
-    origin: configService.get('FRONTEND_URL') || 'http://localhost:3000',
+    origin: (origin, callback) => {
+      // Allow requests with no origin (like mobile apps, curl, Postman) or any frontend
+      callback(null, true);
+    },
     credentials: true,
   });
 
   // Global prefix
   app.setGlobalPrefix('api');
 
-  const port = configService.get('PORT') || 3001;
+  const port = process.env.PORT || configService.get('PORT') || 3001;
   await app.listen(port);
   console.log(`🚀 Backend running on http://localhost:${port}/api`);
 }
