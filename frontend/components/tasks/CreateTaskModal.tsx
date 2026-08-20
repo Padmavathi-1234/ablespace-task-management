@@ -89,7 +89,7 @@ export function CreateTaskModal({
           </label>
           <textarea
             rows={3}
-            className="w-full px-3 py-2 text-xs bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-800 rounded-lg text-gray-900 dark:text-neutral-100 placeholder-gray-400 dark:placeholder-neutral-500 outline-hidden focus:border-gray-400 dark:focus:border-neutral-600 transition-colors"
+            className="w-full px-3 py-2 text-xs bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-800 rounded-xl text-gray-900 dark:text-neutral-100 placeholder-gray-400 dark:placeholder-neutral-500 outline-hidden focus:border-[var(--color-primary)] transition-colors"
             placeholder="Add any context or instructions..."
             value={description}
             onChange={(e) => setDescription(e.target.value)}
@@ -105,7 +105,7 @@ export function CreateTaskModal({
             <select
               value={status}
               onChange={(e) => setStatus(e.target.value as TaskStatus)}
-              className="w-full px-3 py-2 text-xs bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-800 rounded-lg text-gray-900 dark:text-neutral-100 outline-hidden transition-colors"
+              className="w-full px-3 py-2 text-xs bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-800 rounded-xl text-gray-900 dark:text-neutral-100 outline-hidden transition-colors"
             >
               <option value="todo">To Do</option>
               <option value="doing">Doing</option>
@@ -121,7 +121,7 @@ export function CreateTaskModal({
             <select
               value={priority}
               onChange={(e) => setPriority(e.target.value as PriorityLevel)}
-              className="w-full px-3 py-2 text-xs bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-800 rounded-lg text-gray-900 dark:text-neutral-100 outline-hidden transition-colors"
+              className="w-full px-3 py-2 text-xs bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-800 rounded-xl text-gray-900 dark:text-neutral-100 outline-hidden transition-colors"
             >
               <option value="urgent">Urgent</option>
               <option value="high">High</option>
@@ -147,15 +147,17 @@ export function CreateTaskModal({
             variant="secondary"
             size="sm"
             onClick={onClose}
-            className="text-xs"
+            className="text-xs rounded-xl"
+            disabled={createTaskMutation.isPending}
           >
             Cancel
           </Button>
           <Button
             type="submit"
             size="sm"
+            loading={createTaskMutation.isPending}
             disabled={createTaskMutation.isPending}
-            className="bg-[var(--color-primary)] hover:bg-[var(--color-primary)]/90 text-white text-xs px-4"
+            className="bg-[var(--color-primary)] hover:bg-[var(--color-primary)]/90 text-white text-xs px-4 rounded-xl"
           >
             {createTaskMutation.isPending ? 'Creating...' : 'Create Task'}
           </Button>

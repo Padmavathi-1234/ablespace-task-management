@@ -3,12 +3,15 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { useTaskQuery, useUpdateTaskMutation } from '@/hooks/useTasks';
+import { useTaskQuery, useUpdateTaskMutation, useDeleteTaskMutation } from '@/hooks/useTasks';
 import { PriorityLevel, TaskStatus } from '@/types';
 import { PrioritySelect } from '@/components/tasks/PrioritySelect';
 import { DatePickerPopover } from '@/components/tasks/DatePickerPopover';
 import { SubtaskTable } from '@/components/tasks/SubtaskTable';
 import { CommentSection } from '@/components/tasks/CommentSection';
+import { TaskDetailSkeleton } from '@/components/ui/Skeleton';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { ConfirmModal } from '@/components/ui/ConfirmModal';
 import {
   ArrowLeft,
   Eye,
@@ -21,11 +24,12 @@ import {
   Plus,
   FileText,
   Tag,
-  CheckCircle2,
   Clock,
   Edit2,
   X,
   Check,
+  Trash2,
+  FileQuestion,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -59,6 +63,7 @@ export default function TaskDetailPage() {
 
   const { data: task, isLoading, error } = useTaskQuery(taskId);
   const updateTaskMutation = useUpdateTaskMutation();
+  const deleteTaskMutation = useDeleteTaskMutation();
 
   // Local state for editing title & description
   const [isEditingTitle, setIsEditingTitle] = useState(false);
@@ -72,6 +77,10 @@ export default function TaskDetailPage() {
 
   // Status dropdown state
   const [showStatusDropdown, setShowStatusDropdown] = useState(false);
+
+  // Options menu state
+  const [showOptionsMenu, setShowOptionsMenu] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   // Activity update logs
   const [activityLogs, setActivityLogs] = useState<LogEntry[]>([]);
@@ -198,6 +207,17 @@ export default function TaskDetailPage() {
     }
   };
 
+  // Delete Task
+  const handleDeleteTask = async () => {
+    try {
+      await deleteTaskMutation.mutateAsync(taskId);
+      toast.success('Task deleted successfully');
+      router.push('/tasks');
+    } catch {
+      toast.error('Failed to delete task');
+    }
+  };
+
   // Toggle Label
   const handleToggleLabel = (labelName: string) => {
     setSelectedLabels((prev) =>
@@ -217,32 +237,19 @@ export default function TaskDetailPage() {
   };
 
   if (isLoading) {
-    return (
-      <div className="max-w-7xl mx-auto p-6 space-y-6">
-        <div className="h-6 bg-gray-200 dark:bg-neutral-800 rounded-lg w-1/4 animate-pulse" />
-        <div className="flex gap-6">
-          <div className="flex-1 space-y-4">
-            <div className="h-10 bg-gray-200 dark:bg-neutral-800 rounded-xl w-3/4 animate-pulse" />
-            <div className="h-32 bg-gray-100 dark:bg-neutral-850 rounded-2xl animate-pulse" />
-          </div>
-          <div className="w-80 h-96 bg-gray-100 dark:bg-neutral-850 rounded-2xl animate-pulse" />
-        </div>
-      </div>
-    );
+    return <TaskDetailSkeleton />;
   }
 
   if (error || !task) {
     return (
-      <div className="max-w-xl mx-auto my-12 p-8 text-center bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-800 rounded-2xl space-y-4 shadow-sm">
-        <p className="text-sm font-bold text-gray-800 dark:text-neutral-200">
-          Task not found or failed to load.
-        </p>
-        <button
-          onClick={() => router.push('/tasks')}
-          className="px-4 py-2 text-xs font-semibold bg-gray-900 text-white dark:bg-white dark:text-gray-900 rounded-xl hover:opacity-90 transition-opacity cursor-pointer"
-        >
-          Return to Tasks
-        </button>
+      <div className="max-w-xl mx-auto my-12">
+        <EmptyState
+          icon={FileQuestion}
+          title="Task not found"
+          description="The requested task could not be found or may have been deleted."
+          actionLabel="Return to Tasks"
+          onAction={() => router.push('/tasks')}
+        />
       </div>
     );
   }
@@ -306,13 +313,37 @@ export default function TaskDetailPage() {
           </button>
 
           {/* Options Menu */}
-          <button
-            type="button"
-            className="p-1.5 rounded-lg border border-gray-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 text-gray-600 dark:text-neutral-400 hover:bg-gray-50 dark:hover:bg-neutral-850 transition-colors cursor-pointer"
-            title="More Options"
-          >
-            <MoreHorizontal className="w-4 h-4" />
-          </button>
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setShowOptionsMenu(!showOptionsMenu)}
+              className="p-1.5 rounded-lg border border-gray-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 text-gray-600 dark:text-neutral-400 hover:bg-gray-50 dark:hover:bg-neutral-850 transition-colors cursor-pointer"
+              title="More Options"
+            >
+              <MoreHorizontal className="w-4 h-4" />
+            </button>
+
+            {showOptionsMenu && (
+              <>
+                <div
+                  className="fixed inset-0 z-10"
+                  onClick={() => setShowOptionsMenu(false)}
+                />
+                <div className="absolute right-0 mt-1 w-36 bg-white dark:bg-neutral-900 rounded-xl shadow-lg border border-gray-200 dark:border-neutral-800 py-1 z-20 text-left">
+                  <button
+                    onClick={() => {
+                      setShowOptionsMenu(false);
+                      setShowDeleteConfirm(true);
+                    }}
+                    className="w-full px-3 py-1.5 text-xs text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/50 flex items-center gap-2 transition-colors cursor-pointer"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    Delete Task
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
 
           {/* Split View Toggle */}
           <button
@@ -345,12 +376,12 @@ export default function TaskDetailPage() {
                       setIsEditingTitle(false);
                     }
                   }}
-                  className="w-full text-2xl font-bold bg-white dark:bg-neutral-900 border border-blue-500 rounded-xl px-3 py-1.5 text-gray-900 dark:text-white focus:outline-hidden"
+                  className="w-full text-2xl font-bold bg-white dark:bg-neutral-900 border border-[var(--color-primary)] rounded-xl px-3 py-1.5 text-gray-900 dark:text-white focus:outline-hidden"
                 />
                 <button
                   type="button"
                   onClick={handleSaveTitle}
-                  className="p-2 rounded-xl bg-blue-600 text-white hover:bg-blue-700 cursor-pointer shrink-0"
+                  className="p-2 rounded-xl bg-[var(--color-primary)] text-white hover:opacity-90 cursor-pointer shrink-0"
                 >
                   <Check className="w-4 h-4" />
                 </button>
@@ -432,7 +463,7 @@ export default function TaskDetailPage() {
                 <button
                   type="button"
                   onClick={() => setIsEditingDesc(true)}
-                  className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer"
+                  className="text-xs font-semibold text-[var(--color-primary)] hover:underline cursor-pointer"
                 >
                   Edit
                 </button>
@@ -447,7 +478,7 @@ export default function TaskDetailPage() {
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder="Add a detailed description..."
-                  className="w-full text-xs text-gray-900 dark:text-white bg-gray-50 dark:bg-neutral-950 p-3 rounded-xl border border-blue-500 focus:outline-hidden resize-y"
+                  className="w-full text-xs text-gray-900 dark:text-white bg-gray-50 dark:bg-neutral-950 p-3 rounded-xl border border-[var(--color-primary)] focus:outline-hidden resize-y"
                 />
                 <div className="flex items-center gap-2 justify-end">
                   <button
@@ -460,7 +491,7 @@ export default function TaskDetailPage() {
                   <button
                     type="button"
                     onClick={handleSaveDescription}
-                    className="px-3 py-1.5 rounded-lg bg-gray-900 text-white dark:bg-white dark:text-gray-900 text-xs font-medium hover:bg-gray-800 transition-colors cursor-pointer"
+                    className="px-3 py-1.5 rounded-lg bg-[var(--color-primary)] text-white text-xs font-medium hover:opacity-90 transition-opacity cursor-pointer"
                   >
                     Save
                   </button>
@@ -493,7 +524,7 @@ export default function TaskDetailPage() {
                     <FileText className="w-3.5 h-3.5 text-gray-400" />
                     {res}
                   </span>
-                  <span className="text-[10px] text-blue-600 dark:text-blue-400 hover:underline cursor-pointer">
+                  <span className="text-[10px] text-[var(--color-primary)] hover:underline cursor-pointer">
                     Open
                   </span>
                 </div>
@@ -507,11 +538,11 @@ export default function TaskDetailPage() {
                     placeholder="Document title or URL..."
                     value={newResourceName}
                     onChange={(e) => setNewResourceName(e.target.value)}
-                    className="flex-1 px-3 py-1.5 rounded-lg border border-blue-500 bg-white dark:bg-neutral-950 text-xs text-gray-900 dark:text-white focus:outline-hidden"
+                    className="flex-1 px-3 py-1.5 rounded-lg border border-[var(--color-primary)] bg-white dark:bg-neutral-950 text-xs text-gray-900 dark:text-white focus:outline-hidden"
                   />
                   <button
                     type="submit"
-                    className="px-3 py-1.5 rounded-lg bg-gray-900 text-white dark:bg-white dark:text-gray-900 text-xs font-medium cursor-pointer"
+                    className="px-3 py-1.5 rounded-lg bg-[var(--color-primary)] text-white text-xs font-medium cursor-pointer"
                   >
                     Add
                   </button>
@@ -527,7 +558,7 @@ export default function TaskDetailPage() {
                 <button
                   type="button"
                   onClick={() => setShowAddResource(true)}
-                  className="flex items-center gap-1.5 text-xs font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors cursor-pointer pt-1"
+                  className="flex items-center gap-1.5 text-xs font-semibold text-[var(--color-primary)] hover:underline transition-colors cursor-pointer pt-1"
                 >
                   <Plus className="w-3.5 h-3.5" />
                   <span>+ Add document or link...</span>
@@ -603,7 +634,7 @@ export default function TaskDetailPage() {
               <div className="flex items-center gap-2 p-2 rounded-xl bg-gray-50 dark:bg-neutral-850/50 border border-gray-100 dark:border-neutral-800">
                 {task.user ? (
                   <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 rounded-full bg-blue-600 text-white font-bold flex items-center justify-center text-[10px]">
+                    <div className="w-6 h-6 rounded-full bg-[var(--color-primary)] text-white font-bold flex items-center justify-center text-[10px]">
                       {task.user.fullName?.charAt(0) || 'U'}
                     </div>
                     <span className="font-semibold text-gray-800 dark:text-neutral-200 truncate">
@@ -668,7 +699,7 @@ export default function TaskDetailPage() {
                       onClick={() => handleToggleLabel(lbl.name)}
                       className={`px-2 py-0.5 text-[11px] font-medium rounded-full border transition-all cursor-pointer ${
                         isSelected
-                          ? lbl.color + ' ring-1 ring-blue-400 dark:ring-blue-600'
+                          ? lbl.color + ' ring-1 ring-[var(--color-primary)]'
                           : 'bg-gray-50 text-gray-400 border-gray-200 dark:bg-neutral-850 dark:text-neutral-500 dark:border-neutral-800 opacity-60 hover:opacity-100'
                       }`}
                     >
@@ -689,7 +720,7 @@ export default function TaskDetailPage() {
               <div className="space-y-2.5 max-h-48 overflow-y-auto">
                 {activityLogs.map((log) => (
                   <div key={log.id} className="flex items-start gap-2 text-[11px]">
-                    <div className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-1.5 shrink-0" />
+                    <div className="w-1.5 h-1.5 rounded-full bg-[var(--color-primary)] mt-1.5 shrink-0" />
                     <div className="flex-1">
                       <p className="text-gray-700 dark:text-neutral-300 leading-snug">{log.text}</p>
                       <span className="text-[10px] text-gray-400 dark:text-neutral-500">{log.time}</span>
@@ -701,6 +732,17 @@ export default function TaskDetailPage() {
           </div>
         </div>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmModal
+        isOpen={showDeleteConfirm}
+        onClose={() => setShowDeleteConfirm(false)}
+        onConfirm={handleDeleteTask}
+        title="Delete Task"
+        description={`Are you sure you want to delete task "${task.title}"? This action cannot be undone.`}
+        confirmText="Delete Task"
+        isLoading={deleteTaskMutation.isPending}
+      />
     </div>
   );
 }

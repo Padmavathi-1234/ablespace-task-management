@@ -68,7 +68,7 @@ export function CommentSection({ taskId, comments = [] }: CommentSectionProps) {
       <div className="flex items-center justify-between pb-3 border-b border-gray-100 dark:border-neutral-800">
         <h3 className="text-xs font-bold text-gray-800 dark:text-neutral-200 uppercase tracking-wider flex items-center gap-2">
           <MessageSquare className="w-4 h-4 text-blue-500" />
-          <span>Subtasks / Activity</span>
+          <span>Comments & Activity</span>
         </h3>
         <span className="text-xs text-gray-400 dark:text-neutral-500 font-medium">
           {comments.length} {comments.length === 1 ? 'comment' : 'comments'}
@@ -136,7 +136,7 @@ export function CommentSection({ taskId, comments = [] }: CommentSectionProps) {
 
       {/* Input Form */}
       <form onSubmit={handleSubmit} className="relative pt-2">
-        <div className="flex items-end gap-2 p-2 border border-gray-200 dark:border-neutral-800 rounded-xl bg-gray-50/50 dark:bg-neutral-950/40 focus-within:border-blue-500 focus-within:bg-white dark:focus-within:bg-neutral-900 transition-all">
+        <div className="flex items-end gap-2 p-2 border border-gray-200 dark:border-neutral-800 rounded-xl bg-gray-50/50 dark:bg-neutral-950/40 focus-within:border-[var(--color-primary)] focus-within:bg-white dark:focus-within:bg-neutral-900 transition-all">
           <textarea
             rows={2}
             placeholder="Add a comment..."

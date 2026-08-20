@@ -13,20 +13,20 @@ import {
   Pencil, 
   Camera, 
   Loader2,
-  LogOut,
   AlertTriangle
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useTheme } from '@/hooks/useTheme';
 import { COLOR_CONFIGS } from '@/context/ThemeContext';
-import { ColorMode, ThemeMode } from '@/types';
+import { ColorMode } from '@/types';
 import { api } from '@/lib/api';
 import { toast } from 'sonner';
+import { SettingsSkeleton } from '@/components/ui/Skeleton';
 
 type TabType = 'profile' | 'theme' | 'color';
 
 export default function SettingsPage() {
-  const { user, updateUser } = useAuth();
+  const { user, updateUser, loading: authLoading } = useAuth();
   const { theme, colorMode, setTheme, setColorMode } = useTheme();
 
   const [activeTab, setActiveTab] = useState<TabType>('profile');
@@ -88,6 +88,17 @@ export default function SettingsPage() {
     toast.error('You have left the workspace.');
   };
 
+  const handleThemeChange = (newTheme: 'light' | 'dark') => {
+    setTheme(newTheme);
+    toast.success(`Theme updated to ${newTheme} mode`);
+  };
+
+  const handleColorChange = (mode: ColorMode) => {
+    setColorMode(mode);
+    const label = COLOR_CONFIGS[mode]?.label || mode;
+    toast.success(`Accent color changed to ${label}`);
+  };
+
   const menuItems = [
     { id: 'profile' as TabType, label: 'Profile', icon: User },
     { id: 'theme' as TabType, label: 'Theme', icon: Sun },
@@ -102,9 +113,17 @@ export default function SettingsPage() {
 
   const colorModes: ColorMode[] = ['amber', 'blue', 'pink', 'rose', 'emerald', 'black'];
 
+  if (authLoading) {
+    return (
+      <div className="p-6">
+        <SettingsSkeleton />
+      </div>
+    );
+  }
+
   return (
-    <div className="-m-6 min-h-[calc(100vh-0px)] flex flex-col md:flex-row bg-white dark:bg-neutral-950 text-gray-900 dark:text-neutral-100">
-      {/* Left Sub-sidebar (w-64, border-r) */}
+    <div className="-m-4 md:-m-6 min-h-[calc(100vh-56px)] md:min-h-screen flex flex-col md:flex-row bg-white dark:bg-neutral-950 text-gray-900 dark:text-neutral-100">
+      {/* Left Sub-sidebar (w-full md:w-64, stacked on mobile) */}
       <aside className="w-full md:w-64 border-b md:border-b-0 md:border-r border-gray-200 dark:border-neutral-800 bg-gray-50/70 dark:bg-neutral-950/60 p-5 flex flex-col shrink-0">
         {/* Top Link: ← Back to app */}
         <Link
@@ -122,13 +141,13 @@ export default function SettingsPage() {
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search..."
-            className="w-full pl-9 pr-3 py-2 text-xs bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-800 rounded-lg text-gray-900 dark:text-neutral-100 placeholder-gray-400 dark:placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] transition-all"
+            placeholder="Search settings..."
+            className="w-full pl-9 pr-3 py-2 text-xs bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-800 rounded-xl text-gray-900 dark:text-neutral-100 placeholder-gray-400 dark:placeholder-neutral-500 focus:outline-hidden focus:ring-2 focus:ring-[var(--color-primary)] transition-all"
           />
         </div>
 
         {/* Menu Links */}
-        <nav className="space-y-1 flex-1">
+        <nav className="flex flex-row md:flex-col gap-1 overflow-x-auto md:overflow-x-visible pb-2 md:pb-0">
           {filteredMenuItems.map((item) => {
             const Icon = item.icon;
             const isActive = activeTab === item.id;
@@ -136,9 +155,9 @@ export default function SettingsPage() {
               <button
                 key={item.id}
                 onClick={() => setActiveTab(item.id)}
-                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-medium transition-all text-left cursor-pointer ${
+                className={`flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-xs font-medium transition-all text-left cursor-pointer shrink-0 ${
                   isActive
-                    ? 'bg-gray-200/80 dark:bg-neutral-800/80 text-gray-900 dark:text-white font-semibold shadow-2xs'
+                    ? 'bg-gray-200/80 dark:bg-neutral-800 text-gray-900 dark:text-white font-semibold shadow-2xs'
                     : 'text-gray-600 dark:text-neutral-400 hover:bg-gray-100 dark:hover:bg-neutral-900 hover:text-gray-900 dark:hover:text-white'
                 }`}
               >
@@ -150,7 +169,7 @@ export default function SettingsPage() {
         </nav>
       </aside>
 
-      {/* Right Content Panel (flex-1, p-8) */}
+      {/* Right Content Panel (flex-1, p-6 md:p-8) */}
       <main className="flex-1 p-6 md:p-8 overflow-y-auto max-w-4xl">
         {/* Profile Tab */}
         {activeTab === 'profile' && (
@@ -163,7 +182,7 @@ export default function SettingsPage() {
             </div>
 
             {/* Profile Settings Card */}
-            <form onSubmit={handleSaveProfile} className="rounded-xl border border-gray-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 p-6 shadow-xs space-y-6">
+            <form onSubmit={handleSaveProfile} className="rounded-2xl border border-gray-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 p-6 shadow-xs space-y-6">
               {/* Profile Picture */}
               <div className="flex items-center gap-4">
                 <div className="relative group">
@@ -171,10 +190,10 @@ export default function SettingsPage() {
                     <img
                       src={avatarUrl}
                       alt={fullName}
-                      className="w-16 h-16 rounded-full object-cover border-2 border-gray-100 dark:border-neutral-800 shadow-sm"
+                      className="w-16 h-16 rounded-full object-cover border-2 border-gray-100 dark:border-neutral-800 shadow-xs"
                     />
                   ) : (
-                    <div className="w-16 h-16 rounded-full bg-[var(--color-primary)] text-white font-bold flex items-center justify-center text-2xl shadow-sm border-2 border-white dark:border-neutral-800">
+                    <div className="w-16 h-16 rounded-full bg-[var(--color-primary)] text-white font-bold flex items-center justify-center text-2xl shadow-xs border-2 border-white dark:border-neutral-800">
                       {initial}
                     </div>
                   )}
@@ -184,7 +203,7 @@ export default function SettingsPage() {
                       const url = prompt('Enter image URL for avatar:', avatarUrl);
                       if (url !== null) setAvatarUrl(url);
                     }}
-                    className="absolute bottom-0 right-0 p-1.5 bg-white dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 rounded-full text-gray-600 dark:text-neutral-300 shadow-sm hover:scale-105 transition-all cursor-pointer"
+                    className="absolute bottom-0 right-0 p-1.5 bg-white dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 rounded-full text-gray-600 dark:text-neutral-300 shadow-xs hover:scale-105 transition-all cursor-pointer"
                     title="Edit profile picture"
                   >
                     <Camera className="w-3.5 h-3.5" />
@@ -211,9 +230,9 @@ export default function SettingsPage() {
                     value={email}
                     disabled={!isEditingEmail}
                     onChange={(e) => setEmail(e.target.value)}
-                    className={`w-full pr-10 py-2.5 px-3 text-xs rounded-lg border transition-all ${
+                    className={`w-full pr-10 py-2.5 px-3 text-xs rounded-xl border transition-all ${
                       isEditingEmail
-                        ? 'border-[var(--color-primary)] bg-white dark:bg-neutral-950 text-gray-900 dark:text-white focus:outline-none ring-1 ring-[var(--color-primary)]'
+                        ? 'border-[var(--color-primary)] bg-white dark:bg-neutral-950 text-gray-900 dark:text-white focus:outline-hidden ring-1 ring-[var(--color-primary)]'
                         : 'border-gray-200 dark:border-neutral-800 bg-gray-50 dark:bg-neutral-950/50 text-gray-600 dark:text-neutral-400 cursor-not-allowed'
                     }`}
                   />
@@ -237,7 +256,7 @@ export default function SettingsPage() {
                   type="text"
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
-                  className="w-full px-3 py-2.5 text-xs rounded-lg border border-gray-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] transition-all"
+                  className="w-full px-3 py-2.5 text-xs rounded-xl border border-gray-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 text-gray-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-[var(--color-primary)] transition-all"
                   placeholder="e.g. Dexter"
                 />
               </div>
@@ -251,7 +270,7 @@ export default function SettingsPage() {
                   type="text"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  className="w-full px-3 py-2.5 text-xs rounded-lg border border-gray-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] transition-all"
+                  className="w-full px-3 py-2.5 text-xs rounded-xl border border-gray-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 text-gray-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-[var(--color-primary)] transition-all"
                   placeholder="e.g. Designer"
                 />
                 <p className="text-[11px] text-gray-400 dark:text-neutral-500">
@@ -268,7 +287,7 @@ export default function SettingsPage() {
                   type="text"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  className="w-full px-3 py-2.5 text-xs rounded-lg border border-gray-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] transition-all"
+                  className="w-full px-3 py-2.5 text-xs rounded-xl border border-gray-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 text-gray-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-[var(--color-primary)] transition-all"
                   placeholder="e.g. Dexuser"
                 />
                 <p className="text-[11px] text-gray-400 dark:text-neutral-500">
@@ -281,7 +300,7 @@ export default function SettingsPage() {
                 <button
                   type="submit"
                   disabled={isSaving}
-                  className="bg-[var(--color-primary)] hover:opacity-90 text-white font-medium text-xs px-5 py-2.5 rounded-lg shadow-xs transition-all cursor-pointer flex items-center gap-2 disabled:opacity-50"
+                  className="bg-[var(--color-primary)] hover:opacity-90 text-white font-medium text-xs px-5 py-2.5 rounded-xl shadow-xs transition-all cursor-pointer flex items-center gap-2 disabled:opacity-50"
                 >
                   {isSaving && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
                   <span>Save Changes</span>
@@ -294,14 +313,14 @@ export default function SettingsPage() {
               <h2 className="text-base font-semibold text-gray-900 dark:text-white mb-3">
                 Workspace access
               </h2>
-              <div className="rounded-xl border border-gray-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xs">
+              <div className="rounded-2xl border border-gray-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xs">
                 <p className="text-xs text-gray-500 dark:text-neutral-400 font-medium">
                   Remove yourself from the workspace
                 </p>
                 <button
                   type="button"
                   onClick={() => setShowLeaveModal(true)}
-                  className="bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-950/40 dark:text-red-400 border border-red-200 dark:border-red-900 font-medium text-xs px-4 py-2 rounded-lg transition-colors cursor-pointer shrink-0"
+                  className="bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-950/40 dark:text-red-400 border border-red-200 dark:border-red-900 font-medium text-xs px-4 py-2 rounded-xl transition-colors cursor-pointer shrink-0"
                 >
                   Leave Workspace
                 </button>
@@ -326,15 +345,15 @@ export default function SettingsPage() {
               {/* Light Option */}
               <button
                 type="button"
-                onClick={() => setTheme('light')}
-                className={`flex items-center justify-between p-5 rounded-xl border transition-all text-left cursor-pointer ${
+                onClick={() => handleThemeChange('light')}
+                className={`flex items-center justify-between p-5 rounded-2xl border transition-all text-left cursor-pointer ${
                   theme === 'light'
-                    ? 'border-[var(--color-primary)] bg-white dark:bg-neutral-900 shadow-sm ring-2 ring-[var(--color-primary)]/20'
+                    ? 'border-[var(--color-primary)] bg-white dark:bg-neutral-900 shadow-xs ring-2 ring-[var(--color-primary)]/20'
                     : 'border-gray-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 hover:border-gray-300 dark:hover:border-neutral-700'
                 }`}
               >
                 <div className="flex items-center gap-3.5">
-                  <div className="p-2.5 rounded-lg bg-amber-50 dark:bg-amber-950/30 text-amber-500">
+                  <div className="p-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/30 text-amber-500">
                     <Sun className="w-5 h-5" />
                   </div>
                   <div>
@@ -356,15 +375,15 @@ export default function SettingsPage() {
               {/* Dark Option */}
               <button
                 type="button"
-                onClick={() => setTheme('dark')}
-                className={`flex items-center justify-between p-5 rounded-xl border transition-all text-left cursor-pointer ${
+                onClick={() => handleThemeChange('dark')}
+                className={`flex items-center justify-between p-5 rounded-2xl border transition-all text-left cursor-pointer ${
                   theme === 'dark'
-                    ? 'border-[var(--color-primary)] bg-white dark:bg-neutral-900 shadow-sm ring-2 ring-[var(--color-primary)]/20'
+                    ? 'border-[var(--color-primary)] bg-white dark:bg-neutral-900 shadow-xs ring-2 ring-[var(--color-primary)]/20'
                     : 'border-gray-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 hover:border-gray-300 dark:hover:border-neutral-700'
                 }`}
               >
                 <div className="flex items-center gap-3.5">
-                  <div className="p-2.5 rounded-lg bg-purple-50 dark:bg-purple-950/30 text-purple-400">
+                  <div className="p-2.5 rounded-xl bg-purple-50 dark:bg-purple-950/30 text-purple-400">
                     <Moon className="w-5 h-5" />
                   </div>
                   <div>
@@ -406,10 +425,10 @@ export default function SettingsPage() {
                   <button
                     key={mode}
                     type="button"
-                    onClick={() => setColorMode(mode)}
-                    className={`flex items-center justify-between p-4 rounded-xl border transition-all cursor-pointer ${
+                    onClick={() => handleColorChange(mode)}
+                    className={`flex items-center justify-between p-4 rounded-2xl border transition-all cursor-pointer ${
                       isActive
-                        ? 'border-[var(--color-primary)] bg-white dark:bg-neutral-900 shadow-sm ring-2 ring-[var(--color-primary)]/20'
+                        ? 'border-[var(--color-primary)] bg-white dark:bg-neutral-900 shadow-xs ring-2 ring-[var(--color-primary)]/20'
                         : 'border-gray-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 hover:border-gray-300 dark:hover:border-neutral-700'
                     }`}
                   >
@@ -454,14 +473,14 @@ export default function SettingsPage() {
               <button
                 type="button"
                 onClick={() => setShowLeaveModal(false)}
-                className="px-4 py-2 text-xs font-medium text-gray-700 dark:text-neutral-300 hover:bg-gray-100 dark:hover:bg-neutral-800 rounded-lg transition-colors cursor-pointer"
+                className="px-4 py-2 text-xs font-medium text-gray-700 dark:text-neutral-300 hover:bg-gray-100 dark:hover:bg-neutral-800 rounded-xl transition-colors cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 type="button"
                 onClick={handleLeaveWorkspace}
-                className="px-4 py-2 text-xs font-medium bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors cursor-pointer shadow-xs"
+                className="px-4 py-2 text-xs font-medium bg-red-600 hover:bg-red-700 text-white rounded-xl transition-colors cursor-pointer shadow-xs"
               >
                 Confirm Leave
               </button>

@@ -4,13 +4,15 @@ import React, { useState, useMemo } from 'react';
 import { useProjectsQuery } from '@/hooks/useProjects';
 import { ProjectRow } from '@/components/projects/ProjectRow';
 import { CreateProjectModal } from '@/components/projects/CreateProjectModal';
+import { ProjectsTableSkeleton } from '@/components/ui/Skeleton';
+import { EmptyState } from '@/components/ui/EmptyState';
 import { 
   Search, 
   Filter, 
   Plus, 
   SlidersHorizontal,
   FolderPlus,
-  Loader2
+  SearchX
 } from 'lucide-react';
 
 export default function ProjectsPage() {
@@ -36,6 +38,8 @@ export default function ProjectsPage() {
       return matchesSearch && matchesPriority;
     });
   }, [projects, searchQuery, priorityFilter]);
+
+  const hasFilterOrSearch = Boolean(searchQuery || priorityFilter !== 'all');
 
   return (
     <div className="max-w-7xl mx-auto space-y-6">
@@ -105,7 +109,7 @@ export default function ProjectsPage() {
                         setPriorityFilter(p);
                         setFilterMenuOpen(false);
                       }}
-                      className={`w-full text-left px-2.5 py-1.5 text-xs rounded-lg capitalize transition-colors flex items-center justify-between ${
+                      className={`w-full text-left px-2.5 py-1.5 text-xs rounded-lg capitalize transition-colors flex items-center justify-between cursor-pointer ${
                         priorityFilter === p
                           ? 'bg-gray-100 dark:bg-neutral-800 font-semibold text-gray-900 dark:text-white'
                           : 'text-gray-600 dark:text-neutral-400 hover:bg-gray-50 dark:hover:bg-neutral-800/60'
@@ -125,7 +129,7 @@ export default function ProjectsPage() {
           {/* "+ Add Project" CTA (Black background as specified in Figma specs) */}
           <button
             onClick={() => setCreateModalOpen(true)}
-            className="flex items-center gap-1.5 px-4 py-1.5 text-xs font-semibold text-white bg-black dark:bg-white dark:text-black hover:bg-neutral-800 dark:hover:bg-neutral-200 rounded-xl shadow-sm transition-all cursor-pointer"
+            className="flex items-center gap-1.5 px-4 py-1.5 text-xs font-semibold text-white bg-black dark:bg-white dark:text-black hover:bg-neutral-800 dark:hover:bg-neutral-200 rounded-xl shadow-xs transition-all cursor-pointer"
           >
             <Plus className="w-4 h-4" />
             <span>Add Project</span>
@@ -134,40 +138,28 @@ export default function ProjectsPage() {
       </div>
 
       {/* Main Table Container */}
-      <div className="bg-white dark:bg-neutral-900 rounded-2xl border border-gray-200/80 dark:border-neutral-800 shadow-2xs overflow-hidden">
-        {isLoading ? (
-          <div className="flex flex-col items-center justify-center py-20 text-gray-400">
-            <Loader2 className="w-7 h-7 animate-spin text-[var(--color-primary)] mb-2" />
-            <p className="text-xs">Loading projects...</p>
-          </div>
-        ) : error ? (
-          <div className="p-8 text-center text-xs text-red-600 dark:text-red-400">
-            Failed to load projects. Please try refreshing.
-          </div>
-        ) : filteredProjects.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
-            <div className="w-12 h-12 rounded-2xl bg-gray-100 dark:bg-neutral-800 flex items-center justify-center text-gray-400 dark:text-neutral-500 mb-3">
-              <FolderPlus className="w-6 h-6" />
-            </div>
-            <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-1">
-              No projects found
-            </h3>
-            <p className="text-xs text-gray-500 dark:text-neutral-400 max-w-sm mb-4">
-              {searchQuery || priorityFilter !== 'all'
-                ? 'No projects match your search or filter criteria.'
-                : 'Get started by creating your first project.'}
-            </p>
-            <button
-              onClick={() => setCreateModalOpen(true)}
-              className="flex items-center gap-2 px-4 py-2 text-xs font-semibold text-white bg-black dark:bg-white dark:text-black rounded-xl hover:opacity-90 transition-opacity cursor-pointer"
-            >
-              <Plus className="w-4 h-4" />
-              <span>Create Project</span>
-            </button>
-          </div>
-        ) : (
+      {isLoading ? (
+        <ProjectsTableSkeleton />
+      ) : error ? (
+        <div className="bg-white dark:bg-neutral-900 rounded-2xl border border-gray-200/80 dark:border-neutral-800 p-8 text-center text-xs text-red-600 dark:text-red-400">
+          Failed to load projects. Please try refreshing.
+        </div>
+      ) : filteredProjects.length === 0 ? (
+        <EmptyState
+          icon={hasFilterOrSearch ? SearchX : FolderPlus}
+          title={hasFilterOrSearch ? 'No matching projects' : 'No projects yet'}
+          description={
+            hasFilterOrSearch
+              ? 'No projects match your search query or priority filter.'
+              : 'Get started by creating your first project to organize tasks.'
+          }
+          actionLabel="Add Project"
+          onAction={() => setCreateModalOpen(true)}
+        />
+      ) : (
+        <div className="bg-white dark:bg-neutral-900 rounded-2xl border border-gray-200/80 dark:border-neutral-800 shadow-2xs overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
+            <table className="w-full text-left border-collapse min-w-[650px]">
               <thead>
                 <tr className="border-b border-gray-200/80 dark:border-neutral-800 bg-gray-50/50 dark:bg-neutral-800/30">
                   <th className="py-3 px-4 text-xs font-semibold text-gray-500 dark:text-neutral-400 uppercase tracking-wider">
@@ -194,10 +186,8 @@ export default function ProjectsPage() {
               </tbody>
             </table>
           </div>
-        )}
 
-        {/* Bottom Bar "+ Add Projects" Button matching Figma spec */}
-        {!isLoading && filteredProjects.length > 0 && (
+          {/* Bottom Bar "+ Add Projects" Button matching Figma spec */}
           <div className="p-3 border-t border-gray-100 dark:border-neutral-800 bg-gray-50/40 dark:bg-neutral-900/40">
             <button
               onClick={() => setCreateModalOpen(true)}
@@ -207,8 +197,8 @@ export default function ProjectsPage() {
               <span>Add Projects</span>
             </button>
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* Create Project Modal */}
       <CreateProjectModal
