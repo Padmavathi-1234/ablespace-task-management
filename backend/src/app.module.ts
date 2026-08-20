@@ -5,6 +5,10 @@ import { AppService } from './app.service';
 import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
 import { TasksModule } from './tasks/tasks.module';
+import { ProjectsModule } from './projects/projects.module';
+import { LabelsModule } from './labels/labels.module';
+import { CommentsModule } from './comments/comments.module';
+import { UsersModule } from './users/users.module';
 
 @Module({
   imports: [
@@ -15,6 +19,10 @@ import { TasksModule } from './tasks/tasks.module';
     PrismaModule,
     AuthModule,
     TasksModule,
+    ProjectsModule,
+    LabelsModule,
+    CommentsModule,
+    UsersModule,
   ],
   controllers: [AppController],
   providers: [AppService],
