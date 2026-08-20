@@ -3,8 +3,10 @@ import Cookies from 'js-cookie';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
 
+const cleanBaseURL = API_URL.endsWith('/api') ? API_URL : `${API_URL}/api`;
+
 export const api = axios.create({
-  baseURL: API_URL,
+  baseURL: cleanBaseURL,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -13,7 +15,7 @@ export const api = axios.create({
 // Add Bearer token to every request if available
 api.interceptors.request.use((config) => {
   const token = Cookies.get('token') || (typeof window !== 'undefined' ? localStorage.getItem('token') : null);
-  if (token) {
+  if (token && token !== 'mock-guest-token' && token !== 'mock-demo-token') {
     config.headers.Authorization = `Bearer ${token}`;
   }
   return config;

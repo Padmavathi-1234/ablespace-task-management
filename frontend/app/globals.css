@@ -1,10 +1,10 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
-:root {
-  --color-primary: #3B82F6;
-  --color-primary-rgb: 59 130 246;
+@layer base {
+  :root {
+    --color-primary: #3B82F6;
+    --color-primary-rgb: 59 130 246;
+  }
 }
 
 /* Custom scrollbars */
@@ -24,17 +24,4 @@
 
 .dark ::-webkit-scrollbar-thumb {
   background: #374151;
-}
-
-/* Accent helper class */
-.bg-primary-accent {
-  background-color: var(--color-primary);
-}
-
-.text-primary-accent {
-  color: var(--color-primary);
-}
-
-.border-primary-accent {
-  border-color: var(--color-primary);
 }

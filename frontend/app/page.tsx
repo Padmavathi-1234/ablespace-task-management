@@ -1,10 +1,26 @@
+'use client';
+
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/hooks/useAuth';
+
 export default function Home() {
+  const { user, loading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!loading) {
+      if (user) {
+        router.replace('/tasks');
+      } else {
+        router.replace('/login');
+      }
+    }
+  }, [user, loading, router]);
+
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center bg-gray-50 p-6 text-center">
-      <h1 className="text-4xl font-bold tracking-tight text-gray-900 sm:text-5xl">
-        AbleSpace Task Management
-      </h1>
-      <p className="mt-4 text-lg text-gray-600">Setup in progress...</p>
-    </main>
+    <div className="min-h-screen bg-gray-50 dark:bg-neutral-950 flex items-center justify-center">
+      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 dark:border-white"></div>
+    </div>
   );
 }

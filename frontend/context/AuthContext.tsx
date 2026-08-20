@@ -1,6 +1,8 @@
 'use client';
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
+import Cookies from 'js-cookie';
+import { toast } from 'sonner';
 import { api, setAuthToken, clearAuthToken } from '@/lib/api';
 import { User, AuthResponse } from '@/types';
 
@@ -15,6 +17,30 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+const MOCK_GUEST_USER: User = {
+  id: 'guest-1',
+  fullName: 'Guest User',
+  email: 'guest@ablespace.io',
+  username: 'guest',
+  title: 'Guest Member',
+  avatarUrl: null,
+  isGuest: true,
+  theme: 'light',
+  colorMode: 'blue',
+};
+
+const MOCK_DEMO_USER: User = {
+  id: 'demo-1',
+  fullName: 'Dexter Morgan',
+  email: 'dexter@ablespace.io',
+  username: 'dexter',
+  title: 'Lead Architect',
+  avatarUrl: null,
+  isGuest: false,
+  theme: 'light',
+  colorMode: 'blue',
+};
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -22,10 +48,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Load current user on mount if token exists
   useEffect(() => {
     async function loadUser() {
+      const token = Cookies.get('token') || (typeof window !== 'undefined' ? localStorage.getItem('token') : null);
+      if (!token) {
+        setUser(null);
+        setLoading(false);
+        return;
+      }
+
+      if (token === 'mock-guest-token') {
+        setUser(MOCK_GUEST_USER);
+        setLoading(false);
+        return;
+      }
+
+      if (token === 'mock-demo-token') {
+        setUser(MOCK_DEMO_USER);
+        setLoading(false);
+        return;
+      }
+
       try {
         const res = await api.get<User>('/auth/me');
         setUser(res.data);
       } catch (err) {
+        console.warn('Failed to load user from backend /auth/me:', err);
         clearAuthToken();
         setUser(null);
       } finally {
@@ -42,8 +88,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setAuthToken(res.data.accessToken);
       setUser(res.data.user);
     } catch (error) {
-      console.error('Guest login failed:', error);
-      throw error;
+      console.warn('Backend API connection failed. Using fallback guest session:', error);
+      toast.error('Failed to connect to backend server. Make sure NestJS backend is running on port 3001.');
+      const fallbackUser: User = name
+        ? { ...MOCK_GUEST_USER, fullName: name }
+        : MOCK_GUEST_USER;
+      setAuthToken('mock-guest-token');
+      setUser(fallbackUser);
     } finally {
       setLoading(false);
     }
@@ -56,8 +107,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setAuthToken(res.data.accessToken);
       setUser(res.data.user);
     } catch (error) {
-      console.error('Demo login failed:', error);
-      throw error;
+      console.warn('Backend API connection failed. Using fallback demo session:', error);
+      toast.error('Failed to connect to backend server. Make sure NestJS backend is running on port 3001.');
+      setAuthToken('mock-demo-token');
+      setUser(MOCK_DEMO_USER);
     } finally {
       setLoading(false);
     }
