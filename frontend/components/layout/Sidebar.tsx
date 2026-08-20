@@ -10,7 +10,8 @@ import {
   ChevronRight, 
   PanelLeftClose, 
   PanelLeftOpen,
-  Sparkles
+  Sparkles,
+  ChevronsUpDown
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { UserMenu } from './UserMenu';
@@ -41,7 +42,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
       }`}
     >
       {/* Top Workspace / User Profile Header */}
-      <div className="p-3 border-b border-gray-200/60 dark:border-neutral-800/80">
+      <div className="p-3 border-b border-gray-200/60 dark:border-neutral-800/80 relative">
         <button
           onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
           className={`w-full flex items-center gap-3 p-2 rounded-xl hover:bg-gray-200/60 dark:hover:bg-neutral-800/60 transition-colors text-left cursor-pointer ${
@@ -50,7 +51,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
           title={collapsed ? `${displayName}'s Workspace` : undefined}
         >
           <div className="relative">
-            <div className="h-8 w-8 rounded-lg bg-[var(--color-primary)] text-white font-bold flex items-center justify-center text-sm shadow-sm shrink-0">
+            <div className="h-8 w-8 rounded-full bg-[var(--color-primary)] text-white font-bold flex items-center justify-center text-sm shadow-sm shrink-0 overflow-hidden">
               {initial}
             </div>
             <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-500 rounded-full border-2 border-white dark:border-neutral-900" />
@@ -71,7 +72,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
           )}
 
           {!collapsed && (
-            <ChevronDown className={`w-4 h-4 text-gray-400 dark:text-neutral-500 transition-transform ${isUserMenuOpen ? 'rotate-180' : ''}`} />
+            <ChevronsUpDown className="w-4 h-4 text-gray-400 dark:text-neutral-500 shrink-0" />
           )}
         </button>
 

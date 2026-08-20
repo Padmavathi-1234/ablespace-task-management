@@ -62,19 +62,24 @@ export function TaskListView({ tasks, visibleFields, onAddTask, loading }: TaskL
   }
 
   return (
-    <div className="space-y-6 pb-6">
+    <div className="space-y-5 pb-6 select-none">
       {STATUS_COLUMNS.map((column) => {
         const columnTasks = tasksByStatus[column.key] || [];
         const isCollapsed = collapsedGroups[column.key];
 
+        // Skip 'on-hold' if empty
+        if (column.key === 'on-hold' && columnTasks.length === 0) {
+          return null;
+        }
+
         return (
           <div key={column.key} className="space-y-2">
-            {/* Section Header matching Figma: ▾ Section Title (Solid black triangle icon) */}
+            {/* Section Header matching Figma: ▾ Section Title */}
             <div
               onClick={() => toggleGroup(column.key)}
               className="flex items-center gap-2 cursor-pointer select-none py-1 group"
             >
-              <span className="text-[10px] text-gray-800 dark:text-neutral-200 font-bold transition-transform duration-100">
+              <span className="text-[11px] text-gray-800 dark:text-neutral-200 font-bold transition-transform duration-100">
                 {isCollapsed ? '▸' : '▾'}
               </span>
               <h3 className="text-xs font-semibold text-gray-900 dark:text-white">
@@ -87,7 +92,7 @@ export function TaskListView({ tasks, visibleFields, onAddTask, loading }: TaskL
               <div className="bg-white dark:bg-neutral-900 border border-gray-200/90 dark:border-neutral-800 rounded-xl overflow-hidden shadow-2xs">
                 <table className="w-full text-left border-collapse">
                   <thead>
-                    <tr className="bg-gray-100/80 dark:bg-neutral-800/60 border-b border-gray-200/80 dark:border-neutral-800 text-xs font-semibold text-gray-700 dark:text-neutral-300">
+                    <tr className="bg-gray-100/70 dark:bg-neutral-800/60 border-b border-gray-200/80 dark:border-neutral-800 text-xs font-semibold text-gray-700 dark:text-neutral-300">
                       <th className="py-2.5 px-4 font-semibold">Task</th>
                       {showPriority && <th className="py-2.5 px-4 w-32 font-semibold">Priority</th>}
                       {showMembers && <th className="py-2.5 px-4 w-36 font-semibold">Members</th>}
@@ -110,8 +115,13 @@ export function TaskListView({ tasks, visibleFields, onAddTask, loading }: TaskL
                             })()
                           : '—';
 
-                        const assigneeName = task.user?.fullName || 'Admin';
-                        const reporterName = task.creator?.fullName || 'System';
+                        const assigneeName = task.user?.fullName || 'Dexter';
+                        const assigneeInitials = assigneeName
+                          .split(' ')
+                          .map((n) => n[0])
+                          .join('')
+                          .substring(0, 2)
+                          .toUpperCase();
 
                         return (
                           <tr
@@ -135,7 +145,7 @@ export function TaskListView({ tasks, visibleFields, onAddTask, loading }: TaskL
                             {showMembers && (
                               <td className="py-3 px-4">
                                 <div className="flex items-center gap-2">
-                                  <div className="h-6 w-6 rounded-full bg-slate-900 text-white dark:bg-neutral-100 dark:text-black text-[10px] font-bold flex items-center justify-center shrink-0">
+                                  <div className="h-6 w-6 rounded-full bg-[var(--color-primary)] text-white text-[10px] font-bold flex items-center justify-center shrink-0 overflow-hidden shadow-2xs">
                                     {task.user?.avatarUrl ? (
                                       <img
                                         src={task.user.avatarUrl}
@@ -143,7 +153,7 @@ export function TaskListView({ tasks, visibleFields, onAddTask, loading }: TaskL
                                         className="h-6 w-6 rounded-full object-cover"
                                       />
                                     ) : (
-                                      assigneeName.substring(0, 2).toUpperCase()
+                                      assigneeInitials
                                     )}
                                   </div>
                                 </div>
@@ -160,7 +170,7 @@ export function TaskListView({ tasks, visibleFields, onAddTask, loading }: TaskL
                             {/* Reporter */}
                             {showReporter && (
                               <td className="py-3 px-4 text-xs text-gray-600 dark:text-neutral-400">
-                                {reporterName}
+                                {task.creator?.fullName || 'System'}
                               </td>
                             )}
 
@@ -182,9 +192,9 @@ export function TaskListView({ tasks, visibleFields, onAddTask, loading }: TaskL
                       <tr>
                         <td
                           colSpan={6}
-                          className="py-6 text-center text-xs text-gray-400 dark:text-neutral-600"
+                          className="py-4 px-4 text-xs text-gray-400 dark:text-neutral-500 italic"
                         >
-                          No tasks in this list
+                          No tasks in {column.label.toLowerCase()}
                         </td>
                       </tr>
                     )}
