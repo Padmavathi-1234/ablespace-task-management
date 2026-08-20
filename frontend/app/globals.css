@@ -1,11 +1,40 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --color-primary: #3B82F6;
+  --color-primary-rgb: 59 130 246;
 }
 
-body {
-  color: var(--foreground);
-  background: var(--background);
+/* Custom scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 9999px;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: #374151;
+}
+
+/* Accent helper class */
+.bg-primary-accent {
+  background-color: var(--color-primary);
+}
+
+.text-primary-accent {
+  color: var(--color-primary);
+}
+
+.border-primary-accent {
+  border-color: var(--color-primary);
 }
