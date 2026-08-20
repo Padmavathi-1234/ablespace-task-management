@@ -16,6 +16,7 @@ export interface CreateTaskInput {
   dueDate?: string;
   startDate?: string;
   projectId?: string;
+  parentId?: string;
   userId?: string;
   labelIds?: string[];
 }

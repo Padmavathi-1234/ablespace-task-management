@@ -43,8 +43,9 @@ export function useUpdateTaskMutation() {
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: Partial<CreateTaskInput> }) =>
       updateTask(id, data),
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['task', variables.id] });
     },
   });
 }
